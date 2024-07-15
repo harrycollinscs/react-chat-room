@@ -4,13 +4,14 @@ import HomePage from "./components/pages/HomePage";
 import { io } from "socket.io-client";
 import { useState } from "react";
 import ChatPage from "./components/pages/ChatPage";
+import JoinRoomPage from "./components/pages/JoinRoomPage";
 
 const socket = io("ws://localhost:4000");
 
 function App() {
   const [username, setUsername] = useState(""); // Add this
   const [room, setRoom] = useState(""); // Add this
-
+  console.log({ room });
   return (
     <Router>
       <div className="App">
@@ -20,7 +21,7 @@ function App() {
             element={
               <HomePage
                 username={username}
-                setUsername={setUsername} 
+                setUsername={setUsername}
                 room={room}
                 setRoom={setRoom}
                 socket={socket}
@@ -28,13 +29,18 @@ function App() {
             }
           />
           <Route
-            path="/room"
+            path="/room/:roomId"
             element={
-              <ChatPage
-                username={username} // Add this
-                room={room} // Add this
-                socket={socket} // Add this
-              />
+              username && room ? (
+                <ChatPage username={username} room={room} socket={socket} />
+              ) : (
+                <JoinRoomPage
+                  socket={socket}
+                  setRoom={setRoom}
+                  username={username}
+                  setUsername={setUsername}
+                />
+              )
             }
           />
         </Routes>

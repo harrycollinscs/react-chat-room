@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const ChatPage = ({ username, room, socket }) => {
   const [inputValue, setInputValue] = useState(null);
@@ -7,10 +8,11 @@ const ChatPage = ({ username, room, socket }) => {
 
   useEffect(() => {
     socket.on("receive_message", ({ message, user, __createdtime__ }) => {
+      console.log({message, user, __createdtime__})
       setMessagesReceived((state) => [
         ...state,
         {
-          message: message,
+          message,
           user,
           __createdtime__,
         },
@@ -23,7 +25,6 @@ const ChatPage = ({ username, room, socket }) => {
 
   useEffect(() => {
     socket.on("chatroom_users", (data) => {
-      console.log(data);
       setRoomUsers(data);
     });
 
@@ -32,7 +33,6 @@ const ChatPage = ({ username, room, socket }) => {
 
   useEffect(() => {
     socket.on("chatroom_users", (data) => {
-      console.log(data);
       setRoomUsers(data);
     });
 
@@ -45,17 +45,15 @@ const ChatPage = ({ username, room, socket }) => {
 
       socket.emit("send_message", {
         user: {
-          username,
-          id: socket.id
+          username: username.length ? username : "Unknown User",
+          id: socket.id,
         },
-        room,
+        roomId: room,
         message: inputValue,
         __createdtime__: Date.now(),
       });
     }
   };
-
-  console.log({messagesReceived})
 
   return (
     <div>
@@ -70,11 +68,11 @@ const ChatPage = ({ username, room, socket }) => {
             margin: 0,
           }}
         >
-          {roomUsers.map(({ username }, index) => (
+          {roomUsers.map(({ user }, index) => (
             <li style={{ display: "inline-block" }}>
               <p>
                 {index > 0 ? ", " : ""}
-                {username}
+                {user.username}
               </p>
             </li>
           ))}
@@ -86,8 +84,13 @@ const ChatPage = ({ username, room, socket }) => {
 
         <div style={{ border: "1px solid white", borderRadius: 5 }}>
           {messagesReceived?.map(({ message, user }) => (
-            <div style={{ marginTop: 10,textAlign: "right" }}>
-              {/* <p>{user.username}</p> */}
+            <div
+              style={{
+                marginTop: 10,
+                textAlign: socket.id === user.id ? "right" : "left",
+              }}
+            >
+              <p>{user.username}</p>
               <div
                 style={{
                   display: "inline-block",
