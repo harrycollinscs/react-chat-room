@@ -1,26 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const ChatPage = ({ username, room, socket }) => {
   const [inputValue, setInputValue] = useState(null);
   const [messagesReceived, setMessagesReceived] = useState([]);
   const [roomUsers, setRoomUsers] = useState([]);
+  const chatBottomRef = useRef();
 
   useEffect(() => {
     socket.on("receive_message", ({ message, user, __createdtime__ }) => {
-      console.log({message, user, __createdtime__})
+      if (user.id === socket.id) {
+        setInputValue("");
+      }
       setMessagesReceived((state) => [
         ...state,
         {
           message,
           user,
+          isAppMessage: false,
+          __createdtime__,
+        },
+      ]);
+      chatBottomRef.current?.scrollIntoView();
+    });
+
+    return () => socket.off("receive_message");
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on("app_message", ({ message, __createdtime__ }) => {
+      setMessagesReceived((state) => [
+        ...state,
+        {
+          message,
+          isAppMessage: true,
           __createdtime__,
         },
       ]);
     });
 
-    // Remove event listener on component unmount
-    return () => socket.off("receive_message");
+    return () => socket.off("app_message");
   }, [socket]);
 
   useEffect(() => {
@@ -56,9 +75,10 @@ const ChatPage = ({ username, room, socket }) => {
   };
 
   return (
-    <div>
+    <div className="page">
+      <h1 className="page-title">Chat</h1>
       <div style={{ alignItems: "flex-start", padding: 20 }}>
-        <h2 style={{ margin: 0 }}>{room}</h2>
+        <strong style={{ margin: 0 }}>Members</strong>
         <ul
           style={{
             listStyleType: "none",
@@ -82,37 +102,47 @@ const ChatPage = ({ username, room, socket }) => {
       <div style={{ width: "100%", padding: 20 }}>
         <h2>Messages</h2>
 
-        <div style={{ border: "1px solid white", borderRadius: 5 }}>
-          {messagesReceived?.map(({ message, user }) => (
-            <div
-              style={{
-                marginTop: 10,
-                textAlign: socket.id === user.id ? "right" : "left",
-              }}
-            >
-              <p>{user.username}</p>
-              <div
-                style={{
-                  display: "inline-block",
-                  background: "#a7a7a7",
-                  borderRadius: 50,
-                  alignContent: "center",
-                }}
-              >
-                <p style={{ marginRight: 20, marginLeft: 20 }}>{message}</p>
-              </div>
-            </div>
+        <div className="chat-container">
+          {messagesReceived?.map(({ message, user, isAppMessage }, index) => (
+            <>
+              {isAppMessage ? (
+                <div style={{ textAlign: "center" }}>
+                  <p
+                    style={{
+                      border: "2px solid black",
+                      display: "inline-block",
+                      padding: "5px 10px",
+                    }}
+                  >
+                    {message}
+                  </p>
+                </div>
+              ) : (
+                <div
+                  className="user-message"
+                  style={{
+                    textAlign: socket.id === user.id ? "right" : "left",
+                  }}
+                >
+                  <p className="username">{user.username}</p>
+                  <p className="message-content">{message}</p>
+                </div>
+              )}
+            </>
           ))}
+          <div style={{ visibility: "hidden" }} ref={chatBottomRef} />
         </div>
 
-        <div className="card">
+        {/* <div className="card">
           <input
+            className="text-input-old"
             type="text"
             placeholder="Type message here"
+            value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
         </div>
-        <button onClick={handleSendMessage}>Send </button>
+        <button onClick={handleSendMessage}>Send </button> */}
       </div>
     </div>
   );

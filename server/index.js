@@ -15,32 +15,26 @@ const io = new Server(server, {
   },
 });
 
-const CHAT_BOT = "ChatBot"; // Add this
-let chatRoom = ""; // E.g. javascript, node,...
-let allUsers = []; // All users in current chat room
+const CHAT_BOT = "ChatBot";
+let chatRoom = "";
+let allUsers = [];
 
 io.on("connection", (socket) => {
-  //io listens on server connection
   console.log("User connected. ID: " + socket.id);
 
   socket.on("send_message", (data) => {
     const { user, roomId, message, __createdtime__ } = data;
     console.log("Message received: " + message);
-    console.log({data})
     io.in(roomId).emit("receive_message", data);
   });
 
   socket.on("join_room", ({ user, roomId }) => {
-    console.log("Joining room", {
-      user,
-      roomId,
-    });
     socket.join(roomId);
 
     let __createdtime__ = Date.now();
 
     // Send message to all users currently in the room, apart from the user that just joined
-    socket.to(roomId).emit("receive_message", {
+    socket.to(roomId).emit("app_message", {
       message: `${user.username} has joined the chat room`,
       user: {
         username: CHAT_BOT,
@@ -48,8 +42,8 @@ io.on("connection", (socket) => {
       __createdtime__,
     });
 
-    socket.emit("receive_message", {
-      message: `Welcome ${user.username}`,
+    socket.emit("app_message", {
+      message: `You joined the chat`,
       user: {
         username: CHAT_BOT,
       },

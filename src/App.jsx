@@ -1,17 +1,17 @@
-import "./App.css";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import HomePage from "./components/pages/HomePage";
-import { io } from "socket.io-client";
 import { useState } from "react";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { io } from "socket.io-client";
+import "./App.css";
 import ChatPage from "./components/pages/ChatPage";
+import HomePage from "./components/pages/HomePage";
 import JoinRoomPage from "./components/pages/JoinRoomPage";
 
 const socket = io("ws://localhost:4000");
 
 function App() {
-  const [username, setUsername] = useState(""); // Add this
-  const [room, setRoom] = useState(""); // Add this
-  console.log({ room });
+  const [username, setUsername] = useState("");
+  const [room, setRoom] = useState("");
+
   return (
     <Router>
       <div className="App">
